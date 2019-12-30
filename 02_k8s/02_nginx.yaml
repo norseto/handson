@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 8
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx-container
+          image: docker.io/library/nginx:1.17-alpine
+          ports:
+            - containerPort: 80
+          resources:
+            limits:   { cpu: 10m, memory: 64Mi }
+            requests: { cpu: 10m, memory: 64Mi }
+          env:
+          - name: RANDOM_ID
+            value: "0000000001"
+          - name: MY_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          lifecycle:
+            postStart:
+              exec:
+                command: [
+                  "sh", "-c", "echo \"<html><body>Node : ${MY_NODE_NAME}<br/>Pod : ${MY_POD_NAME}</body></html>\" > /usr/share/nginx/html/node.html"
+                ]
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: nginx-service
+# spec:
+#   type: ClusterIP
+#   ports:
+#     - name: "http-port"
+#       protocol: "TCP"
+#       port: 8080
+#       targetPort: 80
+#   selector:
+#     app: nginx
+
