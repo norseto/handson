@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: alpine
+spec:
+  containers:
+  - name: nginx-container
+    image: docker.io/library/alpine:3.11
+    lifecycle:
+      postStart:
+        exec:
+          command: [
+            "sh", "-c", "apk add curl gomplate jq"
+          ]
+    command: ["tail"]
+    args: ["-f", "/dev/null"]
+    resources:
+      limits:   { cpu: 100m, memory: 128Mi }
+      requests: { cpu: 100m, memory: 128Mi }
