@@ -6,6 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Terraform and tflint versions
 ARG TERRAFORM_VERSION=0.12.12
 ARG TFLINT_VERSION=0.10.1
+ARG ISTIO_VERSION=1.4.2
 
 # Or your actual UID, GID on Linux if not the default 1000
 ARG USERNAME=vscode
@@ -29,7 +30,7 @@ RUN apt-get update \
         software-properties-common \
         lsb-release 2>&1 \
     #
-    # [Optional] Install Node.js for Azure Cloud Shell support 
+    # [Optional] Install Node.js for Azure Cloud Shell support
     # Change the "lts/*" in the two lines below to pick a different version
     && curl -so- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash 2>&1 \
     && /bin/bash -c "source $HOME/.nvm/nvm.sh \
@@ -37,7 +38,7 @@ RUN apt-get update \
         && nvm alias default lts/*" 2>&1 \
     #
     # [Optional] For local testing instead of cloud shell
-    # Install Docker CE CLI. 
+    # Install Docker CE CLI.
     && curl -fsSL https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/gpg | apt-key add - 2>/dev/null \
     && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]') $(lsb_release -cs) stable" \
     && apt-get update \
@@ -58,7 +59,7 @@ RUN apt-get update \
     && curl -sSL -o /tmp/docker-downloads/tflint.zip https://github.com/wata727/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_amd64.zip \
     && unzip /tmp/docker-downloads/tflint.zip \
     && mv tflint /usr/local/bin \
-    && cd ~ \ 
+    && cd ~ \
     && rm -rf /tmp/docker-downloads \
     && apt-get install -y graphviz \
     # Create a non-root user to use if preferred - see https://aka.ms/vscode-remote/containers/non-root-user.
@@ -90,7 +91,7 @@ RUN apt-get update \
         sort | tail -n 1 |\
         xargs curl -O -L \
     && tar xzf ./kustomize_v*_linux_amd64.tar.gz \
-    && mv ./kustomize /usr/bin/kustomize \
+    && mv ./kustomize /usr/local/bin/kustomize \
     && rm -f ./kustomize_v*_linux_amd64.tar.gz \
     # Clean up
     && apt-get autoremove -y \
@@ -98,6 +99,14 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     ## Install helm
     && curl -L https://git.io/get_helm.sh | bash \
+	## Install istioctl
+	&& curl -L https://git.io/getLatestIstio | ISTIO_VERSION=$ISTIO_VERSION sh - \
+	&& mv istio-${ISTIO_VERSION}/bin/istioctl /usr/local/bin/istioctl \
+	&& rm -rf istio-${ISTIO_VERSION} \
+	## Install skkafold
+	&& curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64 \
+	&& chmod +x skaffold \
+	&& mv skaffold /usr/local/bin \
     # ## Install AWS SDK
     # && pip3 install awscli --upgrade --user \
     # ## Install IBM Cloud CLI
